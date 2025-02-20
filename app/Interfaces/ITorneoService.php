@@ -11,7 +11,7 @@ interface ITorneoService
     public function getAll(): array;
     public function findById(int $id): ?TorneoDTO;
     public function create(array $data): TorneoDTO;
-    public function update(int $id, array $data): bool;
+    public function update(int $id, array $data): ?bool;
     public function delete(int $id): bool;
     public function restore(int $id): bool;
     public function determinarGanador(Partida $partida);

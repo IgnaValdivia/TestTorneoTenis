@@ -71,12 +71,12 @@ class TorneoService implements ITorneoService
         return TorneoDTO::fromModel($torneo);
     }
 
-    public function update(int $id, array $data): bool
+    public function update(int $id, array $data): ?bool
     {
         $torneo = $this->torneoRepository->findById($id);
 
         if (!$torneo) {
-            throw new Exception("Jugador no encontrado");
+            return null;
         }
 
         return $this->torneoRepository->update($id, [

@@ -167,22 +167,50 @@ class TorneoController extends Controller
      *     path="/api/torneos/{id}",
      *     tags={"Torneos"},
      *     summary="Actualizar un torneo",
+     *     description="Permite actualizar los datos de un torneo existente. Solo se pueden modificar ciertos atributos, como el nombre, la fecha y el estado.",
      *     @OA\Parameter(
      *         name="id",
      *         in="path",
      *         required=true,
+     *         description="ID del torneo a actualizar",
      *         @OA\Schema(type="integer")
      *     ),
      *     @OA\RequestBody(
      *         required=true,
      *         @OA\JsonContent(
-     *             @OA\Property(property="nombre", type="string"),
-     *             @OA\Property(property="tipo", type="string", enum={"Masculino", "Femenino"}),
-     *             @OA\Property(property="fecha", type="string", format="date")
+     *             required={},
+     *             @OA\Property(property="nombre", type="string", example="Torneo Nacional 2025"),
+     *             @OA\Property(property="tipo", type="string", enum={"Masculino", "Femenino"}, example="Masculino"),
+     *             @OA\Property(property="fecha", type="string", format="date", example="2025-06-01"),
+     *             @OA\Property(property="estado", type="string", enum={"Finalizado", "Pendiente"}, example="Pendiente"),
+     *             @OA\Property(property="ganador_id", type="integer", nullable=true, example=5)
      *         )
      *     ),
-     *     @OA\Response(response=200, description="Torneo actualizado"),
-     *     @OA\Response(response=404, description="Torneo no encontrado")
+     *     @OA\Response(
+     *         response=200,
+     *         description="Torneo actualizado correctamente",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Torneo actualizado")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Torneo no encontrado",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Torneo no encontrado")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=422,
+     *         description="Error en la validación o imposibilidad de actualización",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="No se pudo actualizar el torneo"),
+     *             @OA\Property(property="errors", type="object", example={"ganador_id": {"El ganador seleccionado no es válido"}})
+     *         )
+     *     )
      * )
      */
     public function update(Request $request, int $id): JsonResponse
@@ -196,9 +224,14 @@ class TorneoController extends Controller
         ]);
 
         $actualizado = $this->torneoService->update($id, $data);
+
+        if ($actualizado === null) {
+            return response()->json(['message' => 'Torneo no encontrado'], 404);
+        }
+
         return $actualizado
             ? response()->json(['message' => 'Torneo actualizado'], 200)
-            : response()->json(['message' => 'Torneo no encontrado'], 404);
+            : response()->json(['message' => 'No se pudo actualizar el torneo'], 422);
     }
 
     /**

@@ -6,6 +6,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 use App\Models\Torneo;
 use App\Models\Jugador;
+use App\Models\JugadorMasculino;
 use App\Models\Partida;
 use PHPUnit\Framework\Attributes\Test;
 
@@ -59,8 +60,15 @@ class TorneoApiTest extends TestCase
     {
         $response = $this->postJson(route('torneos.store'), []);
 
-        $response->assertStatus(400)
-            ->assertJsonStructure(['message', 'errors']);
+        $response->assertStatus(422)
+            ->assertJsonStructure([
+                'error',
+                'detalles' => [
+                    'nombre',
+                    'tipo',
+                    'fecha'
+                ]
+            ]);
     }
 
     //Obtener un torneo por ID
@@ -196,8 +204,8 @@ class TorneoApiTest extends TestCase
     #[test]
     public function puede_comenzar_un_torneo()
     {
-        $torneo = Torneo::factory()->create();
-        $jugadores = Jugador::factory()->count(4)->create(['genero' => $torneo->tipo])->pluck('id')->toArray();
+        $torneo = Torneo::factory()->create(['tipo' => 'Masculino']);
+        $jugadores = JugadorMasculino::factory()->count(4)->create()->pluck('id')->toArray();
         $torneo->jugadores()->attach($jugadores);
 
         $response = $this->getJson(route('torneos.comenzar', ['id' => $torneo->id]));
@@ -227,8 +235,8 @@ class TorneoApiTest extends TestCase
 
         $response = $this->getJson(route('torneos.comenzar', ['id' => $torneo->id]));
 
-        $response->assertStatus(409)
-            ->assertJson(['message' => 'El torneo está finalizado']);
+        $response->assertStatus(422)
+            ->assertJson(['message' => 'El torneo ya está finalizado']);
     }
 
     //Comenzar torneo (Sin jugadores)
